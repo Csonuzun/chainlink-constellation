@@ -37,6 +37,9 @@ contract Plinko is ReentrancyGuard, VRFConsumerBaseV2, Ownable {
     mapping(uint8 => mapping(uint8 => uint256[])) public plinkoMultipliers;
     mapping(uint256 => Bet) private games;
 
+    error WagerAboveLimit(uint256 wager, uint256 maxWager);
+
+
     constructor(
         uint64 subscriptionId,
         address vrfCoordinator,
@@ -51,4 +54,39 @@ contract Plinko is ReentrancyGuard, VRFConsumerBaseV2, Ownable {
     ) internal override {
 
     }
+
+    function getMultipliers(uint8 risk, uint8 numRows)
+    external
+    view
+    returns (uint256[] memory multipliers)
+    {
+        return plinkoMultipliers[risk][numRows];
+    }
+
+    function setMultipliers(uint8 risk, uint8 numRows, uint256[] memory multipliers) external onlyOwner {
+        plinkoMultipliers[risk][numRows] = multipliers;
+    }
+
+    function getBankroll() external view returns (address) {
+        return address(bankroll);
+    }
+
+    function setBankroll(address _bankroll) external onlyOwner {
+        bankroll = IBankroll(_bankroll);
+    }
+
+    function _kellyWager(uint256 bet, address tokenAddress) internal view {
+        uint256 balance;
+        /// @dev check if the token is native or not
+        if (tokenAddress == address(0)) {
+            balance = address(bankroll).balance;
+        } else {
+            balance = token.balanceOf(address(bankroll));
+        }
+        uint256 maxBet = (balance * 1100000) / 100000000;
+        if (bet > maxBet) {
+            revert WagerAboveLimit(bet, maxBet);
+        }
+    }
+
 }
