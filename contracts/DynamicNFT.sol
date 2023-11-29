@@ -18,7 +18,6 @@ contract DynamicNFT is ERC721URIStorage, AutomationCompatibleInterface {
         interval = updateInterval;
         lastTimeStamp = block.timestamp;
         tokenCounter = 0;
-
     }
 
     function checkUpkeep(
@@ -34,10 +33,10 @@ contract DynamicNFT is ERC721URIStorage, AutomationCompatibleInterface {
     {
         upkeepNeeded = (block.timestamp - lastTimeStamp) > interval;
     }
+
     function changeImageURI(uint256 tokenId) public {
-        require(_isApprovedOrOwner(_msgSender(), tokenId), "ERC721: caller is not owner nor approved");
-        if ()
-        _setTokenURI(tokenId, newURI);
+        //require(_isApprovedOrOwner(_msgSender(), tokenId), "ERC721: caller is not owner nor approved");
+        _setTokenURI(tokenId, imageURIs[(block.timestamp / interval) % imageURIs.length]);
     }
 
     function performUpkeep(
@@ -46,13 +45,9 @@ contract DynamicNFT is ERC721URIStorage, AutomationCompatibleInterface {
         (bool upkeepNeeded,) = checkUpkeep("");
         require(upkeepNeeded, "Time interval not met");
         lastTimeStamp = block.timestamp;
-
-// Rotate the image for each NFT
-        for (uint256 i = 0; i < tokenCounter; i++) {
-            uint256 currentImageIndex = (block.timestamp / interval) % imageURIs.length;
-            _setTokenURI(i, imageURIs[currentImageIndex]);
-        }
+        changeImageURI(tokenCounter - 1);
     }
+
 
     function mintNFT(address recipient) public returns (uint256) {
         uint256 newItemId = tokenCounter;

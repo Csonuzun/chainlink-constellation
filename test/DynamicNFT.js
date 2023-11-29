@@ -35,8 +35,7 @@ describe("DynamicNFT", function () {
             await ethers.provider.send("evm_mine");
 
             // Trigger upkeep (manually in this test case)
-            console.log(await dynamicNFT.checkUpkeep([]));
-            console.log(await dynamicNFT.performUpkeep([]));
+
             const newURI = await dynamicNFT.tokenURI(0);
 
             expect(newURI).to.not.equal(initialURI);
@@ -46,14 +45,14 @@ describe("DynamicNFT", function () {
 
     describe("Upkeep Mechanism", function () {
         it("Should only allow performUpkeep to execute after the interval", async function () {
-            let upkeepNeeded = await dynamicNFT.checkUpkeep([]);
+            let upkeepNeeded = (await dynamicNFT.checkUpkeep([]))[0];
             expect(upkeepNeeded).to.equal(false);
 
             // Increase the EVM time by 31 minutes
             await ethers.provider.send("evm_increaseTime", [1860]);
             await ethers.provider.send("evm_mine");
 
-            upkeepNeeded = await dynamicNFT.checkUpkeep([]);
+            upkeepNeeded = (await dynamicNFT.checkUpkeep([]))[0];
             expect(upkeepNeeded).to.equal(true);
         });
     });
